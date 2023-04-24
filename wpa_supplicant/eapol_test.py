@@ -24,7 +24,7 @@ class eapol_test:
         self.ifname = ifname
         self.ctrl = wpaspy.Ctrl(os.path.join(wpas_ctrl, ifname))
         if "PONG" not in self.ctrl.request("PING"):
-            raise Exception("Failed to connect to eapol_test (%s)" % ifname)
+            raise Exception(f"Failed to connect to eapol_test ({ifname})")
         self.mon = wpaspy.Ctrl(os.path.join(wpas_ctrl, ifname))
         self.mon.attach()
 
@@ -35,19 +35,19 @@ class eapol_test:
         return int(id)
 
     def remove_network(self, id):
-        id = self.request("REMOVE_NETWORK " + str(id))
+        id = self.request(f"REMOVE_NETWORK {str(id)}")
         if "FAIL" in id:
             raise Exception("REMOVE_NETWORK failed")
         return None
 
     def set_network(self, id, field, value):
-        res = self.request("SET_NETWORK " + str(id) + " " + field + " " + value)
+        res = self.request(f"SET_NETWORK {str(id)} {field} {value}")
         if "FAIL" in res:
             raise Exception("SET_NETWORK failed")
         return None
 
     def set_network_quoted(self, id, field, value):
-        res = self.request("SET_NETWORK " + str(id) + " " + field + ' "' + value + '"')
+        res = self.request(f'SET_NETWORK {str(id)} {field} "{value}"')
         if "FAIL" in res:
             raise Exception("SET_NETWORK failed")
         return None
@@ -60,7 +60,7 @@ class eapol_test:
         while True:
             while self.mon.pending():
                 ev = self.mon.recv()
-                logger.debug(self.ifname + ": " + ev)
+                logger.debug(f"{self.ifname}: {ev}")
                 for event in events:
                     if event in ev:
                         return ev

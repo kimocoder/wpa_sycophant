@@ -76,34 +76,28 @@ def wpas_connect():
 
 def wpas_tag_read(message):
     wpas = wpas_connect()
-    if (wpas == None):
+    if wpas is None:
         return False
     cmd = "WPS_NFC_TAG_READ " + str(message).encode("hex")
     global force_freq
     if force_freq:
-        cmd = cmd + " freq=" + force_freq
-    if "FAIL" in wpas.request(cmd):
-        return False
-    return True
+        cmd = f"{cmd} freq={force_freq}"
+    return "FAIL" not in wpas.request(cmd)
 
 
 def wpas_get_handover_req():
     wpas = wpas_connect()
-    if (wpas == None):
+    if wpas is None:
         return None
     res = wpas.request("NFC_GET_HANDOVER_REQ NDEF P2P-CR").rstrip()
-    if "FAIL" in res:
-        return None
-    return res.decode("hex")
+    return None if "FAIL" in res else res.decode("hex")
 
 def wpas_get_handover_req_wps():
     wpas = wpas_connect()
-    if (wpas == None):
+    if wpas is None:
         return None
     res = wpas.request("NFC_GET_HANDOVER_REQ NDEF WPS-CR").rstrip()
-    if "FAIL" in res:
-        return None
-    return res.decode("hex")
+    return None if "FAIL" in res else res.decode("hex")
 
 
 def wpas_get_handover_sel(tag=False):
@@ -121,32 +115,40 @@ def wpas_get_handover_sel(tag=False):
 
 def wpas_get_handover_sel_wps():
     wpas = wpas_connect()
-    if (wpas == None):
+    if wpas is None:
         return None
     res = wpas.request("NFC_GET_HANDOVER_SEL NDEF WPS-CR");
-    if "FAIL" in res:
-        return None
-    return res.rstrip().decode("hex")
+    return None if "FAIL" in res else res.rstrip().decode("hex")
 
 
 def wpas_report_handover(req, sel, type):
     wpas = wpas_connect()
-    if (wpas == None):
+    if wpas is None:
         return None
-    cmd = "NFC_REPORT_HANDOVER " + type + " P2P " + str(req).encode("hex") + " " + str(sel).encode("hex")
+    cmd = (
+        f"NFC_REPORT_HANDOVER {type} P2P "
+        + str(req).encode("hex")
+        + " "
+        + str(sel).encode("hex")
+    )
     global force_freq
     if force_freq:
-        cmd = cmd + " freq=" + force_freq
+        cmd = f"{cmd} freq={force_freq}"
     return wpas.request(cmd)
 
 
 def wpas_report_handover_wsc(req, sel, type):
     wpas = wpas_connect()
-    if (wpas == None):
+    if wpas is None:
         return None
-    cmd = "NFC_REPORT_HANDOVER " + type + " WPS " + str(req).encode("hex") + " " + str(sel).encode("hex")
+    cmd = (
+        f"NFC_REPORT_HANDOVER {type} WPS "
+        + str(req).encode("hex")
+        + " "
+        + str(sel).encode("hex")
+    )
     if force_freq:
-        cmd = cmd + " freq=" + force_freq
+        cmd = f"{cmd} freq={force_freq}"
     return wpas.request(cmd)
 
 
@@ -266,18 +268,18 @@ class HandoverServer(nfc.handover.HandoverServer):
     # override to avoid parser error in request/response.pretty() in nfcpy
     # due to new WSC handover format
     def _process_request(self, request):
-        summary("received handover request {}".format(request.type))
+        summary(f"received handover request {request.type}")
         response = nfc.ndef.Message("\xd1\x02\x01Hs\x12")
-        if not request.type == 'urn:nfc:wkt:Hr':
+        if request.type != 'urn:nfc:wkt:Hr':
             summary("not a handover request")
         else:
             try:
                 request = nfc.ndef.HandoverRequestMessage(request)
             except nfc.ndef.DecodeError as e:
-                summary("error decoding 'Hr' message: {}".format(e))
+                summary(f"error decoding 'Hr' message: {e}")
             else:
                 response = self.process_request(request)
-        summary("send handover response {}".format(response.type))
+        summary(f"send handover response {response.type}")
         return response
 
     def process_request(self, request):

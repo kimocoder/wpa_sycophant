@@ -17,13 +17,9 @@ WPAS_DBUS_NETWORK_INTERFACE = "fi.w1.wpa_supplicant1.Network"
 
 def byte_array_to_string(s):
 	import urllib
-	r = ""    
-	for c in s:
-		if c >= 32 and c < 127:
-			r += "%c" % c
-		else:
-			r += urllib.quote(chr(c))
-	return r
+	return "".join(
+		"%c" % c if c >= 32 and c < 127 else urllib.quote(chr(c)) for c in s
+	)
 
 def list_interfaces(wpas_obj):
 	ifaces = wpas_obj.Get(WPAS_DBUS_INTERFACE, 'Interfaces',

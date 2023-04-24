@@ -115,11 +115,11 @@ class P2P_Invite (threading.Thread):
 
 	# Sets up p2p_invite dictionary
 	def constructArguements(self):
-		self.P2PDictionary = \
-			{'peer':dbus.ObjectPath(self.path+'/Peers/'+self.addr)}
+		self.P2PDictionary = {
+			'peer': dbus.ObjectPath(f'{self.path}/Peers/{self.addr}')
+		}
 		if (self.persistent_group_object != None):
-			self.P2PDictionary.update({"persistent_group_object":
-					self.persistent_group_object})
+			self.P2PDictionary["persistent_group_object"] = self.persistent_group_object
 
 	# Run p2p_invite
 	def run(self):
